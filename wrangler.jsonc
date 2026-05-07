@@ -10,10 +10,13 @@
 	"observability": {
 		"enabled": true
 	},
+	"vars": {
+		"ALLOWED_ORIGIN": "https://si3rraquack.github.io"
+	},
 	"kv_namespaces": [
 		{
-		"binding": "USER_NOTIFICATION",
-		"id": "8b9eaad561894b9987964ee724ee4340"
+			"binding": "VISITOR_COUNTER",
+			"id": "8b9eaad561894b9987964ee724ee4340"
 		}
 	]
 }
