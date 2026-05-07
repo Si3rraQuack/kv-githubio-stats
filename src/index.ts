@@ -33,7 +33,7 @@ export default {
 
     try {
       const currentCount = Number((await env.VISITOR_COUNTER.get(COUNTER_KEY)) ?? "0");
-      const nextCount = currentCount + 1;
+      const nextCount = currentCount + 2;
 
       await env.VISITOR_COUNTER.put(COUNTER_KEY, String(nextCount));
 
