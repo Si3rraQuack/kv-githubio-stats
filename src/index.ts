@@ -1,16 +1,48 @@
 export interface Env {
-  USER_NOTIFICATION: KVNamespace;
+  VISITOR_COUNTER: KVNamespace;
+  ALLOWED_ORIGIN: string;
+}
+
+const COUNTER_KEY = "total";
+
+function corsHeaders(origin: string): HeadersInit {
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Cache-Control": "no-store",
+  };
 }
 
 export default {
-  async fetch(request, env, ctx): Promise<Response> {
+  async fetch(request, env): Promise<Response> {
+    const url = new URL(request.url);
+    const headers = corsHeaders(env.ALLOWED_ORIGIN);
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers });
+    }
+
+    if (url.pathname !== "/visit") {
+      return new Response("Not found", { status: 404, headers });
+    }
+
+    if (request.method !== "GET") {
+      return new Response("Method not allowed", { status: 405, headers });
+    }
+
     try {
-      await env.USER_NOTIFICATION.put("user_2", "disabled");
-      const value = await env.USER_NOTIFICATION.get("user_2");
-      if (value === null) {
-        return new Response("Value not found", { status: 404 });
-      }
-      return new Response(value);
+      const currentCount = Number((await env.VISITOR_COUNTER.get(COUNTER_KEY)) ?? "0");
+      const nextCount = currentCount + 1;
+
+      await env.VISITOR_COUNTER.put(COUNTER_KEY, String(nextCount));
+
+      return Response.json(
+        { count: nextCount },
+        {
+          headers,
+        },
+      );
     } catch (err) {
       console.error(`KV returned error:`, err);
       const errorMessage =
@@ -19,7 +51,7 @@ export default {
           : "An unknown error occurred when accessing KV storage";
       return new Response(errorMessage, {
         status: 500,
-        headers: { "Content-Type": "text/plain" },
+        headers: { ...headers, "Content-Type": "text/plain" },
       });
     }
   },
